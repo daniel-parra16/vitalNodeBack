@@ -34,6 +34,14 @@ Cómo verificar que todo funciona (comandos de prueba)
 Cómo comprobar que los commits salen como “Verified” en GitHub
 
 Si hay errores comunes en Windows o Git Bash, también explícalos y cómo evitarlos.
+
+
+
+
+JWT.secret = "a9f3c2d8b7e64f1c9d2a5e8f3b6c1d9e7a4f0c2b8d6e1f9a3c5b7d2e8f4c6a1"
+JWT.expiration.access=900000
+JWT.expiration.refresh=604800000
+JWT.inactividad.minutos=30
 	*/
 
 }
