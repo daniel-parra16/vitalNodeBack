@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.daniel_parra16.vitalNode.auth.models.UsuarioAuth;
 import com.daniel_parra16.vitalNode.auth.repositories.UsuarioAuthRepository;
 
 import jakarta.servlet.FilterChain;
@@ -72,9 +73,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 6. Verificar que el usuario aún existe y está activo en la BD
         // Esto protege el caso donde se elimina o desactiva un usuario
         // pero su token aún no ha expirado
-        boolean usuarioExiste = usuarioAuthRepository.existsById(usuarioId);
-        if (!usuarioExiste) {
-            filterChain.doFilter(request, response);
+
+        UsuarioAuth user = usuarioAuthRepository
+                .findByNumeroDocumento(usuarioId)
+                .orElse(null);
+
+        System.out.println("TOKEN: " + token);
+        System.out.println("SUBJECT: " + usuarioId);
+        System.out.println("ROLES: " + roles);
+        System.out.println("USER FOUND: " + (user != null));
+
+        if (user == null || !user.isActivo()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+
+            String json = """
+                    {
+                        "status": 401,
+                        "error": "Unauthorized",
+                        "message": "Usuario no encontrado o inactivo"
+                    }
+                    """;
+
+            response.getWriter().write(json);
+            response.getWriter().flush();
             return;
         }
 
@@ -102,4 +124,5 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 11. Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
+
 }
