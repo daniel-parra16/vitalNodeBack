@@ -78,11 +78,12 @@ public class AuthServiceImpl implements AuthService {
                                 .numeroDocumento(request.getNumeroDocumento())
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .roles(List.of(Rol.ROLE_USER))
+                                .activo(true)
                                 .build();
 
                 usuarioAuthRepository.save(usuarioAuth);
 
-                return Map.of("mensaje", "Usuario registrado correctamente. Verifica tu correo.");
+                return Map.of("mensaje", "Usuario registrado correctamente.");
         }
 
         // ─────────────────────────────────────────
@@ -104,6 +105,8 @@ public class AuthServiceImpl implements AuthService {
                         throw new UnauthorizedException("Número de documento o contraseña incorrectos");
 
                 // 3. Buscar datos personales del usuario
+                System.out.println("BUSCANDO USUARIO: " + usuarioAuth);
+                System.out.println("BUSCANDO USUARIO EN BD: " + usuarioAuth.getId());
                 Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
                                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
@@ -126,7 +129,8 @@ public class AuthServiceImpl implements AuthService {
                                 .map(Rol::name)
                                 .toList();
 
-                String accessToken = jwtService.generarAccessToken(usuarioAuth.getId(), roles, usuario.getNom(),
+                String accessToken = jwtService.generarAccessToken(usuarioAuth.getId(), roles,
+                                usuario.getNom() + " " + usuario.getApe(),
                                 usuario.getNumeroDocumento());
                 String refreshToken = jwtService.generarRefreshToken(usuarioAuth.getId());
 

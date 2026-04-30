@@ -1,4 +1,4 @@
-package com.daniel_parra16.vitalNode.usuarios.dtos;
+package com.daniel_parra16.vitalNode.usuarios.dtos.user;
 
 import lombok.Data;
 

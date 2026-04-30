@@ -24,9 +24,9 @@ public class Medico {
     private String id;
 
     @Indexed(unique = true)
-    private String numeroDocumento; // 🔥 relación con Usuario
+    private String numeroDocumento;
 
-    private String registroMedico; // tarjeta profesional
+    private String registroMedico;
 
     private String especialidad;
 
@@ -34,9 +34,7 @@ public class Medico {
 
     private Integer aniosExperiencia;
 
-    private boolean disponible;
-
-    private List<String> horarios;
+    private boolean activo; // 🔥 mejor que "disponible"
 
     @CreatedDate
     private LocalDateTime createdAt;

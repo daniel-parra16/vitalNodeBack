@@ -1,7 +1,8 @@
-package com.daniel_parra16.vitalNode.usuarios.services;
+package com.daniel_parra16.vitalNode.usuarios.services.usuario;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,10 +12,10 @@ import com.daniel_parra16.vitalNode.auth.models.Rol;
 import com.daniel_parra16.vitalNode.auth.models.UsuarioAuth;
 import com.daniel_parra16.vitalNode.auth.repositories.UsuarioAuthRepository;
 import com.daniel_parra16.vitalNode.exceptions.BadRequestException;
-import com.daniel_parra16.vitalNode.usuarios.dtos.CreateUserRequest;
-import com.daniel_parra16.vitalNode.usuarios.dtos.UpdateRoleRequest;
-import com.daniel_parra16.vitalNode.usuarios.dtos.UpdateUserRequest;
-import com.daniel_parra16.vitalNode.usuarios.dtos.UserResponse;
+import com.daniel_parra16.vitalNode.usuarios.dtos.user.CreateUserRequest;
+import com.daniel_parra16.vitalNode.usuarios.dtos.user.UpdateRoleRequest;
+import com.daniel_parra16.vitalNode.usuarios.dtos.user.UpdateUserRequest;
+import com.daniel_parra16.vitalNode.usuarios.dtos.user.UserResponse;
 import com.daniel_parra16.vitalNode.usuarios.models.Usuario;
 import com.daniel_parra16.vitalNode.usuarios.repositories.UsuarioRepository;
 
@@ -39,7 +40,10 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RuntimeException("El email ya está en uso");
         }
 
+        String uuid = UUID.randomUUID().toString();
+
         Usuario usuario = Usuario.builder()
+                .id(uuid)
                 .numeroDocumento(request.getNumeroDocumento())
                 .tipo(request.getTipo())
                 .nom(request.getNom())
@@ -52,6 +56,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.save(usuario);
 
         UsuarioAuth auth = UsuarioAuth.builder()
+                .id(uuid)
                 .numeroDocumento(request.getNumeroDocumento())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(request.getRoles())

@@ -1,20 +1,18 @@
-package com.daniel_parra16.vitalNode.usuarios.dtos;
+package com.daniel_parra16.vitalNode.usuarios.dtos.medico;
 
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class CreateMedicoRequest {
+@Builder
+public class MedicoResponse {
 
-    @NotBlank
+    private String numeroDocumento;
     private String registroMedico;
-
-    @NotBlank
     private String especialidad;
-
     private List<String> subEspecialidades;
-
     private Integer aniosExperiencia;
+    private boolean activo;
 }

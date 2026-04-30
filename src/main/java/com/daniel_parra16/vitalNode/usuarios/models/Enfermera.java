@@ -24,7 +24,7 @@ public class Enfermera {
     private String id;
 
     @Indexed(unique = true)
-    private String numeroDocumento; // 🔥 relación con Usuario
+    private String numeroDocumento;
 
     private String registroProfesional;
 
@@ -32,7 +32,7 @@ public class Enfermera {
 
     private List<String> habilidades;
 
-    private boolean disponible;
+    private boolean activo;
 
     @CreatedDate
     private LocalDateTime createdAt;

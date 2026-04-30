@@ -57,8 +57,21 @@ public class SecurityConfig {
                                                                 "/api/auth/tipoDocumento")
                                                 .permitAll()
 
-                                                // Solo admin
-                                                .requestMatchers("/api/users/**").authenticated()
+                                                // ADMIN completo
+                                                .requestMatchers(HttpMethod.POST, "/api/users")
+                                                .hasAuthority("ROLE_ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/users/**")
+                                                .hasAuthority("ROLE_ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/users/*/role")
+                                                .hasAuthority("ROLE_ADMIN")
+
+                                                // DOCTOR y NURSE pueden ver
+                                                .requestMatchers(HttpMethod.GET, "/api/users/**")
+                                                .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE")
+
+                                                // UPDATE parcial
+                                                .requestMatchers(HttpMethod.PUT, "/api/users/**")
+                                                .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR")
 
                                                 // Cualquier usuario autenticado
                                                 .anyRequest().authenticated())
