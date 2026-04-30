@@ -19,6 +19,7 @@ import com.daniel_parra16.vitalNode.auth.dtos.RefreshTokenRequest;
 import com.daniel_parra16.vitalNode.auth.dtos.RegistroRequest;
 import com.daniel_parra16.vitalNode.auth.dtos.TipoDoc;
 import com.daniel_parra16.vitalNode.auth.services.AuthService;
+import com.daniel_parra16.vitalNode.exceptions.ApiResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,38 +48,61 @@ public class AuthController {
 
     // POST /api/auth/registro
     @PostMapping("/registro")
-    public ResponseEntity<Map<String, String>> registro(
+    public ResponseEntity<ApiResponse<Map<String, String>>> registro(
             @Valid @RequestBody RegistroRequest request) {
 
         Map<String, String> response = authService.registro(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<Map<String, String>>builder()
+                        .status(201)
+                        .message("Usuario registrado")
+                        .data(response)
+                        .build());
     }
 
     // POST /api/auth/login
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request) {
 
         LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(
+                ApiResponse.<LoginResponse>builder()
+                        .status(200)
+                        .message("Login exitoso")
+                        .data(response)
+                        .build());
     }
 
     // POST /api/auth/refresh
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refresh(
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
             @Valid @RequestBody RefreshTokenRequest request) {
 
         LoginResponse response = authService.renovarToken(request);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(
+                ApiResponse.<LoginResponse>builder()
+                        .status(200)
+                        .message("Token renovado")
+                        .data(response)
+                        .build());
     }
 
     // POST /api/auth/logout
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @Valid @RequestBody RefreshTokenRequest request) {
 
         authService.logout(request);
-        return ResponseEntity.ok(Map.of("mensaje", "Sesión cerrada correctamente"));
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .status(200)
+                        .message("Sesión cerrada correctamente")
+                        .build());
     }
     /*
      * // POST /api/auth/recuperar-password

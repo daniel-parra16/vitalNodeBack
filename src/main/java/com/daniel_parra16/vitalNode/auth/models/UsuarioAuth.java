@@ -21,10 +21,12 @@ public class UsuarioAuth {
     @Id
     private String id;
 
-    @Indexed(unique = true, sparse = true)
+    @Indexed(unique = true)
     private String numeroDocumento;
 
     private String password;
     private List<Rol> roles;
+
+    private boolean activo;
 
 }

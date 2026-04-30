@@ -1,11 +1,10 @@
 package com.daniel_parra16.vitalNode.usuarios.models;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,38 +13,27 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Document(collection = "UsuariosPerfil")
+@Document(collection = "Enfermeras")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@CompoundIndex(name = "idx_documento_numero", def = "{'numeroDocumento': 1}", unique = true)
-public class Usuario {
+public class Enfermera {
 
     @Id
     private String id;
 
-    private TipoDoc tipo;
-
+    @Indexed(unique = true)
     private String numeroDocumento;
 
-    private String nom;
+    private String registroProfesional;
 
-    private String ape;
+    private String area;
 
-    @Indexed(unique = true)
-    private String email;
-
-    private String phone;
-
-    private Direccion direc;
+    private List<String> habilidades;
 
     private boolean activo;
 
     @CreatedDate
     private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
 }

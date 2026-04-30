@@ -23,7 +23,7 @@ import com.daniel_parra16.vitalNode.exceptions.ConflictException;
 import com.daniel_parra16.vitalNode.exceptions.NotFoundException;
 import com.daniel_parra16.vitalNode.exceptions.UnauthorizedException;
 import com.daniel_parra16.vitalNode.security.JwtService;
-import com.daniel_parra16.vitalNode.usuarios.models.Documento;
+import com.daniel_parra16.vitalNode.usuarios.models.TipoDoc;
 import com.daniel_parra16.vitalNode.usuarios.models.Usuario;
 import com.daniel_parra16.vitalNode.usuarios.repositories.UsuarioRepository;
 
@@ -61,11 +61,8 @@ public class AuthServiceImpl implements AuthService {
                 // 4. Crear y guardar Usuario con datos personales
                 Usuario usuario = Usuario.builder()
                                 .id(uuid)
-                                .doc(Documento.builder()
-                                                .tipo(com.daniel_parra16.vitalNode.usuarios.models.TipoDoc
-                                                                .valueOf(request.getTipoDocumento().name()))
-                                                .numero(request.getNumeroDocumento())
-                                                .build())
+                                .tipo(TipoDoc.valueOf(request.getTipoDocumento().name()))
+                                .numeroDocumento(request.getNumeroDocumento())
                                 .nom(request.getNombres())
                                 .ape(request.getApellidos())
                                 .phone(request.getTelefono())
@@ -81,11 +78,12 @@ public class AuthServiceImpl implements AuthService {
                                 .numeroDocumento(request.getNumeroDocumento())
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .roles(List.of(Rol.ROLE_USER))
+                                .activo(true)
                                 .build();
 
                 usuarioAuthRepository.save(usuarioAuth);
 
-                return Map.of("mensaje", "Usuario registrado correctamente. Verifica tu correo.");
+                return Map.of("mensaje", "Usuario registrado correctamente.");
         }
 
         // ─────────────────────────────────────────
@@ -107,6 +105,8 @@ public class AuthServiceImpl implements AuthService {
                         throw new UnauthorizedException("Número de documento o contraseña incorrectos");
 
                 // 3. Buscar datos personales del usuario
+                System.out.println("BUSCANDO USUARIO: " + usuarioAuth);
+                System.out.println("BUSCANDO USUARIO EN BD: " + usuarioAuth.getId());
                 Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
                                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
 
@@ -129,8 +129,9 @@ public class AuthServiceImpl implements AuthService {
                                 .map(Rol::name)
                                 .toList();
 
-                String accessToken = jwtService.generarAccessToken(usuarioAuth.getId(), roles, usuario.getNom(),
-                                usuario.getDoc().getNumero());
+                String accessToken = jwtService.generarAccessToken(usuarioAuth.getId(), roles,
+                                usuario.getNom() + " " + usuario.getApe(),
+                                usuario.getNumeroDocumento());
                 String refreshToken = jwtService.generarRefreshToken(usuarioAuth.getId());
 
                 // 7. Guardar nueva sesión
@@ -196,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
 
                 // 7. Generar nuevo Access Token
                 String nuevoAccessToken = jwtService.generarAccessToken(usuarioId, roles, usuario.getNom(),
-                                usuario.getDoc().getNumero());
+                                usuario.getNumeroDocumento());
 
                 return LoginResponse.builder()
                                 .accessToken(nuevoAccessToken)
