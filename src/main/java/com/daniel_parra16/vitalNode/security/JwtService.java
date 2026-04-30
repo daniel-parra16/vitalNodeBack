@@ -49,10 +49,9 @@ public class JwtService {
     // para autenticar las peticiones al backend
     public String generarAccessToken(String usuarioId, List<String> roles, String nombres, String numDoc) {
         return Jwts.builder()
-                .subject(usuarioId)
+                .subject(numDoc)
                 .claim("roles", roles)
                 .claim("nombres", nombres)
-                .claim("numDoc", numDoc)
                 .claim("tipo", "ACCESS")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))

@@ -19,19 +19,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@CompoundIndex(name = "idx_documento_numero", def = "{'doc.numero': 1}", unique = true)
+@CompoundIndex(name = "idx_documento_numero", def = "{'numeroDocumento': 1}", unique = true)
 public class Usuario {
 
     @Id
     private String id;
 
-    private Documento doc;
+    private TipoDoc tipo;
+
+    private String numeroDocumento;
 
     private String nom;
 
     private String ape;
 
-    @Indexed(unique = true, sparse = true)
+    @Indexed(unique = true)
     private String email;
 
     private String phone;
