@@ -33,9 +33,6 @@ public class CreateUserRequest {
     @NotBlank
     private String phone;
 
-    @NotBlank
-    private String password;
-
     @NotEmpty
     private List<Rol> roles;
 }

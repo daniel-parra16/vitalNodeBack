@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -121,6 +122,20 @@ public class JwtService {
         }
     }
 
+    public boolean esFirmaValida(String token) {
+    try {
+        Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token);
+
+        return true;
+
+    } catch (Exception e) {
+        return false;
+    }
+}
+
     // ----------------------------------------------------------------------------------------------
     // Metodos para extraer uno o mas claims del token JWT
     // ----------------------------------------------------------------------------------------------
@@ -151,8 +166,16 @@ public class JwtService {
     // de expiracion
     // ----------------------------------------------------------------------------------------------
 
-    private boolean estaExpirado(String token) {
-        return extraerFechaExpiracion(token).before(new Date());
+    public boolean estaExpirado(String token) {
+    try {
+        Date expiration = extraerFechaExpiracion(token);
+        return expiration.before(new Date());
+
+    } catch (ExpiredJwtException e) {
+        return true; // ✅ aquí detectas expirado correctamente
+    } catch (Exception e) {
+        return false; // otros errores ≠ expirado
     }
+}
 
 }
