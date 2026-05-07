@@ -58,7 +58,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         UsuarioAuth auth = UsuarioAuth.builder()
                 .id(uuid)
                 .numeroDocumento(request.getNumeroDocumento())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .password(passwordEncoder.encode(request.getNumeroDocumento()))
                 .roles(request.getRoles())
                 .activo(true)
                 .build();

@@ -32,97 +32,100 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Leer el header Authorization
         String authHeader = request.getHeader("Authorization");
 
-        // 2. Si no hay header o no empieza con "Bearer " — dejar pasar sin autenticar
-        // Las rutas públicas como /auth/login no necesitan token
+        // 🔓 Rutas sin token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Extraer el token quitando "Bearer "
         String token = authHeader.substring(7);
 
-        // 4. Validar que sea un Access Token válido y no expirado
-        // Si ya expiro retorna un error 401 para que el front haga una peticion de
-        // refresh y obtener un nuevo token de acceso.
-        if (!jwtService.esAccessTokenValido(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
-            response.setContentType("application/json;charset=UTF-8");
-            response.setCharacterEncoding("UTF-8");
+        try {
 
-            String json = """
-                    {
-                        "status": 401,
-                        "error": "Unauthorized",
-                        "message": "El token ha expirado o es inválido"
-                    }
-                    """;
+            // 🔴 1. TOKEN EXPIRADO (único caso donde frontend debe hacer refresh)
+            if (jwtService.estaExpirado(token)) {
+                sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "TOKEN_EXPIRED",
+                        "El token ha expirado");
+                return;
+            }
 
-            response.getWriter().write(json);
-            response.getWriter().flush();
-            return;
+            // 🔴 2. TOKEN INVÁLIDO (firma incorrecta, manipulado, etc)
+            if (!jwtService.esFirmaValida(token)) {
+                sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "INVALID_TOKEN",
+                        "Token inválido");
+                return;
+            }
+
+            if (!"ACCESS".equals(jwtService.extraerTipoToken(token))) {
+    sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+            "INVALID_TOKEN",
+            "Tipo de token inválido");
+    return;
+}
+
+            // ✅ 3. Extraer datos
+            String usuarioId = jwtService.extraerUsuarioId(token);
+            List<String> roles = jwtService.extraerRoles(token);
+
+            // 🔴 4. Usuario inválido
+            UsuarioAuth user = usuarioAuthRepository
+                    .findByNumeroDocumento(usuarioId)
+                    .orElse(null);
+
+            if (user == null || !user.isActivo()) {
+                sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "USER_INVALID",
+                        "Usuario no válido o inactivo");
+                return;
+            }
+
+            // ✅ 5. Crear authorities
+            List<SimpleGrantedAuthority> authorities = roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList();
+
+            // ✅ 6. Autenticación
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            usuarioId,
+                            null,
+                            authorities
+                    );
+
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            // 🔴 fallback real
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "AUTH_ERROR",
+                    "Error procesando el token");
         }
-
-        // 5. Extraer el usuarioId y los roles del token
-        String usuarioId = jwtService.extraerUsuarioId(token);
-        List<String> roles = jwtService.extraerRoles(token);
-
-        // 6. Verificar que el usuario aún existe y está activo en la BD
-        // Esto protege el caso donde se elimina o desactiva un usuario
-        // pero su token aún no ha expirado
-
-        UsuarioAuth user = usuarioAuthRepository
-                .findByNumeroDocumento(usuarioId)
-                .orElse(null);
-
-        System.out.println("TOKEN: " + token);
-        System.out.println("SUBJECT: " + usuarioId);
-        System.out.println("ROLES: " + roles);
-        System.out.println("USER FOUND: " + (user != null));
-
-        if (user == null || !user.isActivo()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-
-            String json = """
-                    {
-                        "status": 401,
-                        "error": "Unauthorized",
-                        "message": "Usuario no encontrado o inactivo"
-                    }
-                    """;
-
-            response.getWriter().write(json);
-            response.getWriter().flush();
-            return;
-        }
-
-        // 7. Convertir los roles a GrantedAuthority — formato que entiende Spring
-        // Security
-        List<SimpleGrantedAuthority> authorities = roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .toList();
-
-        // 8. Crear el objeto de autenticación
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                usuarioId, // principal — lo puedes recuperar en el controller
-                null, // credentials — null porque ya validamos con JWT
-                authorities // roles
-        );
-
-        // 9. Agregar detalles de la petición (IP, session, etc.)
-        authentication.setDetails(
-                new WebAuthenticationDetailsSource().buildDetails(request));
-
-        // 10. Registrar la autenticación en el contexto de Spring Security
-        // A partir de aquí Spring sabe quién es el usuario en esta petición
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 11. Continuar con la cadena de filtros
-        filterChain.doFilter(request, response);
     }
 
+    private void sendError(HttpServletResponse response, int status,
+            String error, String message) throws IOException {
+
+        response.setStatus(status);
+        response.setContentType("application/json;charset=UTF-8");
+
+        String json = String.format("""
+                {
+                    "status": %d,
+                    "error": "%s",
+                    "message": "%s"
+                }
+                """, status, error, message);
+
+        response.getWriter().write(json);
+        response.getWriter().flush();
+    }
 }
